@@ -1,0 +1,9 @@
+{
+  "followers_number": "1,102",
+  "following_number": "863",
+  "followed" : 0,
+  "unfollowed" : 0,
+  "liked" : 0,
+  "commented" : 0,
+  "stories" : 0
+}

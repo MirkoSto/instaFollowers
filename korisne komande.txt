@@ -1,0 +1,110 @@
+pip install -r requirements.txt
+
+
+---------------------------------------------------------------------
+za migracije baze podataka:
+
+python manage.py db init //inicijalizovanje direktorijuma migracije
+python manage.py db migrate -m "Naziv migracije"
+python manage.py db upgrade
+python manage.py db 
+
+
+
+
+---------------------------------------------------------------------
+powershell za redis servis:
+
+docker ps -a //za prikaz svih kontejnera u dokeru
+
+//za izvrsavanje komandi u redisu
+docker exec -it migrations_redis_1 bash 
+redis-cli
+
+set KEY "VALUE"
+get KEY
+
+rpush key value
+lrange 0 -1 //citanje cele liste
+
+slanje poruka u kanalu
+
+subscribe kanal 
+
+---------------------------------------------------------------------
+DOCKER:
+
+RUN pip install --upgrade pip
+
+podesavanje pythonpath-a u image:
+
+ENV PYTHONPATH = "/rootfolder projekta"
+
+-pri kreiranju image stavljati u konfiguraciji obavezno ime taga!
+-u yaml fajlu pisati bez razmaka operator = !
+
+-RUN komanda se izvrsava prilikom kreiranja image
+-CMD komanda se izvrsava nakon kreiranja image, dok je pokrenut
+
+---------------------------------------------------------------------
+YAML fajl
+
+healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]  //izvrsava se lokalno u okviru kontejnera
+      timeout: 10s  //ako komanda nije uspela, ponavlja se za 10s
+      retries: 10   //ukupan broj ponavljanja je 10
+
+
+SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://root:root@{databaseUrl}/authenticationDB"  //authenticationDB je naziv servisa za bazu konfigurisan u yaml fajlu!
+
+-mapiranje fajl sistema racunar:kontejner za smestanje podataka
+volumes:
+      - C:/Users/mirko/Desktop/IEP/V5_vezbanje/data:/var/lib/mysql
+
+
+kreiranje virtuelnog HDD:
+
+volumes:
+  naziv_diska: 
+
+naziv_diska se definise u tagu volumes zeljenog kontejnera
+
+---------------------------------------------------------------------
+Slanje jwt kroz header:
+
+Authorization, Bearer token
+
+---------------------------------------------------------------------
+adresa 0.0.0.0 kao argument app.run (host = ) znaci da aplikacija slusa zahteve sa svih adresa na kojima se izvrsava
+
+
+---------------------------------------------------------------------
+U kodu:
+
+words = request.args["words"]
+
+//za pretragu u bazi po reci u stringu
+threads = Thread.query.filter(Thread.title.like(f"%{words}%")).all() 
+
+
+//za vise reci u stringu
+threads = Thread.query.filter(
+        and_(
+            *[Thread.title.like(f"%{word}%") for word in words]
+        )
+    ).all()  
+
+
+//referenciranje stranog kljuca 
+
+idUser = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False) //naziv tabele iz __tablename__ !!!, u veznoj tabeli ovo je ONE strana, u druge dve tabele treba dodati MANY stranu!!!
+
+//MANY strana u drugoj tabeli
+roles = db.relationship("Role", secondary = UserRole.__table__, back_populates = "users") 
+
+- "Role" ime klase modela Role
+- secondary je vezna tabela izmedju Role i User
+- back_populates argument koji sluzi za inicijalizovanje ovog polja klase prilikom citanja korisnika iz baze
+
+
+automatski genersan ID neke tabele se dobija nakon komitovanja u bazi -> objekat.id za dohvatanje 
