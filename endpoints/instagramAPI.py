@@ -16,8 +16,8 @@ jwt = JWTManager(app)
 @app.route("/login", methods = ["POST"])
 def login():
     instagramClient = InstagramClient()
- #   self.username = 
- #   self.password =
+    instagramClient.username = request.args.get('username')
+    instagramClient.password = request.args.get('password')
     instagramClient.login_thread.start()
     return "logging..."
 
