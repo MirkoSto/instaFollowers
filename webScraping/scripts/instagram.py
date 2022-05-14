@@ -27,6 +27,7 @@ print(Configuration.CHROMEDRIVER_PATH)
 #TODO: staviti logovanje u funckiju koja ce pozivati sve ove akcije (PeriodicCalls, ako bude i dalje namenjena za to)
 
 
+
 class InstagramClient:
 
     def __init__(self):
@@ -69,7 +70,7 @@ class InstagramClient:
 
 
 
-
+    #TODO: napraviti proveru da li su tacni kredencijali
     def login(self):
         print("Logovanje...")
 
@@ -94,6 +95,18 @@ class InstagramClient:
             time.sleep(5)
             self.logged = True
             WebDriverInstance.logged = True
+
+            statistic_dir = Configuration.USER_STATISTIC_DIR_PATH
+
+            with open(statistic_dir) as file:
+                data = json.load(file)
+
+            data["loggedIn"] = True
+
+            with open(statistic_dir, 'w') as file:
+                json.dump(data, file)
+
+
         except Exception as e:
             print(str(e))
 

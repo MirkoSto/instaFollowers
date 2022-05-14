@@ -10,5 +10,7 @@
   "max_unfollowed": 30,
   "max_liked": 150,
   "max_commented": 20,
-  "max_stories": 200
+  "max_stories": 200,
+  "logged": true,
+  "loggedIn": true
 }

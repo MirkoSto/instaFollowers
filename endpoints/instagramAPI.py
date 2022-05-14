@@ -19,7 +19,25 @@ def login():
     instagramClient.username = request.args.get('username')
     instagramClient.password = request.args.get('password')
     instagramClient.login_thread.start()
-    return "logging..."
+    return {"response" : "logging"}
+
+
+
+@app.route("/isLoged", methods = ["GET"])
+def isLoged():
+    mydir = Configuration.USER_STATISTIC_DIR_PATH
+
+    with open(mydir) as file:
+        data = json.load(file)
+
+        if not data["logged"]:
+            print("logging")
+            return {"message": "logging"}
+        else:
+            print("logged")
+            return {"message": "logged"}
+
+
 
 
 @app.route("/statistic", methods = ["GET"])
