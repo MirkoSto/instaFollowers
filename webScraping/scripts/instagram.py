@@ -92,20 +92,30 @@ class InstagramClient:
 
             # TODO: proveriti neuspelo logovanje
 
-            time.sleep(5)
-            self.logged = True
-            WebDriverInstance.logged = True
+            time.sleep(7)
 
             statistic_dir = Configuration.USER_STATISTIC_DIR_PATH
-
             with open(statistic_dir) as file:
                 data = json.load(file)
 
-            data["loggedIn"] = True
+            #ako je ulogovan
+            if driver.current_url != URL.INSTAGRAM_LOGIN:
+                self.logged = True
+                WebDriverInstance.logged = True
 
-            with open(statistic_dir, 'w') as file:
-                json.dump(data, file)
+                data["logged"] = True
 
+                with open(statistic_dir, 'w') as file:
+                    json.dump(data, file)
+
+            #ako nije uspeo da se uloguje
+            else:
+
+                print("problem u mrezi ili u kredencijalima")
+                data["logged"] = False
+
+                with open(statistic_dir, 'w') as file:
+                    json.dump(data, file)
 
         except Exception as e:
             print(str(e))

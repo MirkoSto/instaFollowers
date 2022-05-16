@@ -1,16 +1,1 @@
-{
-  "followers_number": "10",
-  "following_number": "30",
-  "followed": 0,
-  "unfollowed": 0,
-  "liked": 0,
-  "commented": 0,
-  "stories": 0,
-  "max_followed": 30,
-  "max_unfollowed": 30,
-  "max_liked": 150,
-  "max_commented": 20,
-  "max_stories": 200,
-  "logged": true,
-  "loggedIn": true
-}
+{"followers_number": "10", "following_number": "30", "followed": 0, "unfollowed": 0, "liked": 0, "commented": 0, "stories": 0, "max_followed": 30, "max_unfollowed": 30, "max_liked": 150, "max_commented": 20, "max_stories": 200, "logged": true}
