@@ -74,7 +74,9 @@ class InstagramClient:
     def login(self):
         print("Logovanje...")
 
+        statistic_dir = Configuration.USER_STATISTIC_DIR_PATH
         driver = self.driver
+        failed = False;
 
         try:
             driver.get(URL.INSTAGRAM_LOGIN)
@@ -90,35 +92,53 @@ class InstagramClient:
             button = driver.find_element(by=By.XPATH, value=XPaths.LOGIN_SUBMIT_BUTTON)
             button.click()
 
-            # TODO: proveriti neuspelo logovanje
+        #ako je doslo do greske, nece se ulogovati
+        except Exception as e:
+            print(str(e))
 
-            time.sleep(7)
-
-            statistic_dir = Configuration.USER_STATISTIC_DIR_PATH
             with open(statistic_dir) as file:
                 data = json.load(file)
 
-            #ako je ulogovan
-            if driver.current_url != URL.INSTAGRAM_LOGIN:
-                self.logged = True
-                WebDriverInstance.logged = True
+            print("Problem u kredencijalima!")
+            data["logged"] = False
 
-                data["logged"] = True
+            with open(statistic_dir, 'w') as file:
+                json.dump(data, file)
 
-                with open(statistic_dir, 'w') as file:
-                    json.dump(data, file)
+            failed = True
+
+
+        if not failed:
+
+            time.sleep(7)
+
+            with open(statistic_dir) as file:
+                data = json.load(file)
+
+            print(driver.current_url)
 
             #ako nije uspeo da se uloguje
-            else:
-
-                print("problem u mrezi ili u kredencijalima")
+            if driver.current_url == URL.INSTAGRAM_LOGIN:
+                print("Problem u mrezi ili u kredencijalima")
                 data["logged"] = False
 
                 with open(statistic_dir, 'w') as file:
                     json.dump(data, file)
 
-        except Exception as e:
-            print(str(e))
+            # ako je ulogovan
+            else:
+
+                self.logged = True
+                WebDriverInstance.logged = True
+
+                data["logged"] = True
+                data["username"] = self.username
+                with open(statistic_dir, 'w') as file:
+                    json.dump(data, file)
+
+                self.followers_following()
+
+
 
     def followers_following(self):
         print("Dohvatanje broja pratilaca")
@@ -139,7 +159,7 @@ class InstagramClient:
         with open(statistic_dir, 'r') as file:
             data = json.load(file)
 
-        if (data is None):
+        if data is None:
             print("Error: data from statistic.json is None!")
 
             data = {
