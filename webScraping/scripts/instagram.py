@@ -1,8 +1,9 @@
+import time
+import json
+
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
-import time
-import json
 from threading import Thread
 
 from configuration import Configuration
@@ -12,16 +13,16 @@ from webScraping.scripts.webdriverInstance import WebDriverInstance
 from webScraping.strings.xpaths import XPaths
 from webScraping.strings.urls import URL
 
-from webScraping.scripts.webUtility import showPicture, findFollowButtons, getPicturesForTag
+from webScraping.scripts.webUtility import showPicture, findFollowButtons, getPicturesForTag, get_cookies, set_cookies
 from webScraping.scripts.utility import getUnfollowedUsernames, getStatisticData, updateFollowedUsernames, \
-    getFollowedUsernames
+    getFollowedUsernames, getFromStatistic, updateStatisticData
 
 from webScraping.scripts import randomNumbers
 
 print(Configuration.CHROMEDRIVER_PATH)
 
 # TODO: za svako vreme cekanja genersiati random broj sekundi
-# TODO: omoguciti random skrolovanje gore dole pre neke akcije, sacekati neko vreme pre preuzimanje akcije
+# TODO: omoguciti random skrolovanje gore-dole pre neke akcije, sacekati neko vreme pre preuzimanja akcije
 # TODO: gledati sliku neko vreme
 
 #TODO: staviti logovanje u funckiju koja ce pozivati sve ove akcije (PeriodicCalls, ako bude i dalje namenjena za to)
@@ -30,44 +31,44 @@ print(Configuration.CHROMEDRIVER_PATH)
 
 class InstagramClient:
 
+    client = None
+
     def __init__(self):
 
-        self.driver = WebDriverInstance()
+        self.driver = WebDriverInstance().driver
 
         self.username = Configuration.USERNAME
         self.password = Configuration.PASSWORD
 
         self.logged = False
-        self.tag = ""
+        self.follow_tags = ""
+        self.like_tags = ""
 
-        self.max_liked = None
-        self.max_stories = None
-        self.max_unfollowed = None
-        self.max_followed = None
-        self.max_commented = None
+        self.max_followed = getFromStatistic("max_followed")
+        self.max_unfollowed = getFromStatistic("max_unfollowed")
+        self.max_liked = getFromStatistic("max_liked")
+        self.max_watched = getFromStatistic("max_stories")
+        self.max_commented = getFromStatistic("max_commented")
+
         self.temp_followed = 0
         self.temp_unfollowed = 0
-        self.temp_stories = 0
+        self.temp_watched = 0
         self.temp_liked = 0
         self.temp_commented = 0
 
-        self.initStatisticData()
+        #flegovi da li je danas upucen zahtev za datom akcijom
+        self.follow_requested = False
+        self.unfollow_requested = False
+        self.like_requested = False
+        self.watch_requested = False
+
+        self.started_periodic_calls = False
 
         self.login_thread = Thread(target=self.login, args=())
         self.follow_thread = Thread(target=self.follow, args=())
         self.watch_thread = Thread(target=self.watchStories, args=())
 
-
-    def initStatisticData(self):
-        data = getStatisticData()
-
-        self.max_followed = data.get("max_followed")
-        self.max_unfollowed = data.get("max_unfollowed")
-        self.max_stories = data.get("max_stories")
-        self.max_liked = data.get("max_liked")
-        self.max_commented = data.get("max_commented")
-
-
+        self.login_with_cookies(self.driver)
 
 
     #TODO: napraviti proveru da li su tacni kredencijali
@@ -76,68 +77,90 @@ class InstagramClient:
 
         statistic_dir = Configuration.USER_STATISTIC_DIR_PATH
         driver = self.driver
-        failed = False;
 
-        try:
-            driver.get(URL.INSTAGRAM_LOGIN)
-            # print(self.driver.page_source)
+        failed = self.login_with_cookies(driver)
 
-            driver.implicitly_wait(10)
-            user_name_elem = driver.find_element(by=By.XPATH, value=XPaths.LOGIN_USERNAME)
-            user_name_elem.clear()
-            user_name_elem.send_keys(self.username)
-            pass_elem = driver.find_element(by=By.XPATH, value=XPaths.LOGIN_PASSWORD)
-            pass_elem.clear()
-            pass_elem.send_keys(self.password)
-            button = driver.find_element(by=By.XPATH, value=XPaths.LOGIN_SUBMIT_BUTTON)
-            button.click()
+        #ako nema kolacica
+        if failed:
+            try:
+                #vec je ucitana stranica
+                #driver.get(URL.INSTAGRAM_LOGIN)
+                # print(self.driver.page_source)
 
-        #ako je doslo do greske, nece se ulogovati
-        except Exception as e:
-            print(str(e))
+                driver.implicitly_wait(10)
+                user_name_elem = driver.find_element(by=By.XPATH, value=XPaths.LOGIN_USERNAME)
+                user_name_elem.clear()
+                user_name_elem.send_keys(self.username)
+                pass_elem = driver.find_element(by=By.XPATH, value=XPaths.LOGIN_PASSWORD)
+                pass_elem.clear()
+                pass_elem.send_keys(self.password)
+                button = driver.find_element(by=By.XPATH, value=XPaths.LOGIN_SUBMIT_BUTTON)
+                button.click()
 
-            with open(statistic_dir) as file:
-                data = json.load(file)
+                failed = False
 
-            print("Problem u kredencijalima!")
-            data["logged"] = False
+            #ako je doslo do greske, nece se ulogovati
+            except Exception as e:
+                print(str(e))
 
-            with open(statistic_dir, 'w') as file:
-                json.dump(data, file)
+                with open(statistic_dir) as file:
+                    data = json.load(file)
 
-            failed = True
-
-
-        if not failed:
-
-            time.sleep(7)
-
-            with open(statistic_dir) as file:
-                data = json.load(file)
-
-            print(driver.current_url)
-
-            #ako nije uspeo da se uloguje
-            if driver.current_url == URL.INSTAGRAM_LOGIN:
-                print("Problem u mrezi ili u kredencijalima")
+                print("Selenium exception!")
                 data["logged"] = False
 
                 with open(statistic_dir, 'w') as file:
                     json.dump(data, file)
 
-            # ako je ulogovan
-            else:
+                failed = True
 
-                self.logged = True
-                WebDriverInstance.logged = True
+            #ako je failed = False, zavrsava se funkcija i vraca se odgovor da je neuspelo logovanje
+            if not failed:
 
-                data["logged"] = True
-                data["username"] = self.username
-                with open(statistic_dir, 'w') as file:
-                    json.dump(data, file)
+                time.sleep(4)
 
-                self.followers_following()
+                with open(statistic_dir) as file:
+                    data = json.load(file)
 
+                print(driver.current_url)
+
+                #ako nije uspeo da se uloguje
+                if driver.current_url == URL.INSTAGRAM_LOGIN:
+                    print("Problem u mrezi ili u kredencijalima")
+                    data["logged"] = False
+
+                    with open(statistic_dir, 'w') as file:
+                        json.dump(data, file)
+
+                # ako je ulogovan
+                else:
+
+                    self.logged = True
+
+                    data["logged"] = True
+                    data["username"] = self.username
+                    with open(statistic_dir, 'w') as file:
+                        json.dump(data, file)
+
+                    self.followers_following()
+
+                    #preuzimanje kolacica
+                    get_cookies(driver)
+
+
+    #vraca vrednost failed
+    def login_with_cookies(self, driver):
+        # dodavanje kolacica
+
+        has_cookies = set_cookies(driver)
+
+        if has_cookies:
+            driver.get(URL.INSTAGRAM)
+            self.logged = True
+            return False
+
+        else:
+            return True
 
 
     def followers_following(self):
@@ -173,6 +196,7 @@ class InstagramClient:
         with open(statistic_dir, 'w') as file:
             json.dump(data, file)
 
+
     #vraca broj zapracenih korisnika
     def follow(self):
         print("Priprema za pracenje...")
@@ -187,11 +211,12 @@ class InstagramClient:
         print(followed)
 
         if not self.logged:
-            self.login()
+            self.login_with_cookies(driver)
 
+        #TODO: resiti problem indeksa taga
         try:
-            print(f"Tag sa pracenje: {self.tag}")
-            driver.get(URL.TAG_SEARCH + self.tag)
+            print(f"Tag sa pracenje: {self.tag[0]}")
+            driver.get(URL.TAG_SEARCH + self.tag[0])
 
             if not showPicture(driver):
                 return 0
@@ -199,19 +224,23 @@ class InstagramClient:
             follow_buttons, follow_usernames = findFollowButtons(driver)
             new_followed = []
 
-            #TODO: resiti problem sa importovanjem
             number_follows = randomNumbers.followNumberOneTry()
+            if self.temp_followed + number_follows > self.max_followed:
+                number_follows = self.max_followed - self.temp_followed
+
             print(f"Broj pracenja u ovom zahtevu: {number_follows}")
 
-            for i in range(0, number_follows):
+            i = 0
+            while i < number_follows:
 
                 button_color = follow_buttons[i].value_of_css_property("background-color")
                 print("Color: " + button_color)
                 print(follow_buttons[i].text)
 
-                # ako je dugme plavo --> zaprati i ako nije nekad pre zapratio
-                if button_color == Configuration.BLUE_COLOR_FOLLOW_BUTTON and follow_usernames[i] not in followed:
+                # ako je dugme plavo i ako nije nekad pre zapratio --> zaprati
+                if button_color != Configuration.WHITE_COLOR_FOLLOW_BUTTON and follow_usernames[i] not in followed:
                     self.temp_followed = self.temp_followed + 1
+
                     #TODO: otkomentarisati liniju ispod na kraju testiranja
                     #follow_buttons[i].click()
                     new_followed.append(follow_usernames[i])
@@ -221,22 +250,16 @@ class InstagramClient:
                     if self.max_followed == self.temp_followed:
                         break
 
-                    time.sleep(0.4)
+                    time.sleep(randomNumbers.secondForWaitFollow())
 
-                #ako je ispunjen broj pracenja za jedan zahtev
-                if self.temp_followed == number_follows:
-                    break
+                i = i + 1
 
             if len(new_followed) > 0:
                 updateFollowedUsernames(new_followed)
-
+                updateStatisticData(self.temp_followed)
 
             print(f"Zapraceno {self.temp_followed} od {number_follows}")
             return self.temp_followed
-
-            #TODO: preci na izvrsavanje svakodnevnih akcija
-            # na neko vreme, pa se vratiti na pracenje dok ne predje kvotu
-
 
         except Exception as e:
             print(e)
@@ -246,9 +269,6 @@ class InstagramClient:
     # kako bi se ponasalo realno ponasanje korisnika na platformi
     def unfollow(self):
         driver = self.driver
-
-        if not self.logged:
-            self.login()
 
         try:
             driver.get(URL.INSTAGRAM + Configuration.USERNAME)
@@ -262,10 +282,6 @@ class InstagramClient:
     #ne mora da vraca, ima vec u instagramClient instanci temp atribut!!
     def watchStories(self):
         driver = self.driver
-
-        if not self.logged:
-            self.login()
-
         driver.get(URL.TAG_SEARCH + self.tag)
 
         pic_urls = getPicturesForTag(driver)
@@ -343,6 +359,11 @@ class InstagramClient:
                 continue
 
 
-    def wathcFollowersStories(self):
+    #obe fje vracaju broj ostvarenih akcija
+    def like(self):
+        pass
+
+    #gledanje storija korisnika koje pratim
+    def watch(self):
         pass
 

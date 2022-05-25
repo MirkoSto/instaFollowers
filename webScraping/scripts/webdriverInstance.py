@@ -1,12 +1,13 @@
+import json
+import time
+
 from selenium import webdriver
 from configuration import Configuration
 
 
-
 class WebDriverInstance:
-    driver = None
 
-    def __new__(cls):
+    def __init__(self):
 
         options = webdriver.ChromeOptions()
         options.headless = False
@@ -20,5 +21,6 @@ class WebDriverInstance:
         options.add_experimental_option('useAutomationExtension', False)
         options.add_argument('--disable-blink-features=AutomationControlled')
 
-        cls.driver = webdriver.Chrome(options=options, executable_path=Configuration.CHROMEDRIVER_PATH)
-        return cls.driver
+        self.driver = webdriver.Chrome(options=options, executable_path=Configuration.CHROMEDRIVER_PATH)
+
+
