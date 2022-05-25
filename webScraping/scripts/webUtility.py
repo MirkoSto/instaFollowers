@@ -1,11 +1,11 @@
 import time
 from selenium.webdriver.common.by import By
-from webScraping.scripts.classNamesCSS import ClassNames
+from webScraping.strings.classNamesCSS import ClassNames
 from configuration import Configuration
 from webScraping.scripts import randomNumbers
 
 # TODO: "realnije" traziti slike
-from webScraping.scripts.xpaths import XPaths
+from webScraping.strings.xpaths import XPaths
 
 
 def showPicture(driver):

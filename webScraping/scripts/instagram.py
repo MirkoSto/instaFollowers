@@ -6,13 +6,13 @@ import json
 from threading import Thread
 
 from configuration import Configuration
-from webScraping.scripts.classNamesCSS import ClassNames
+from webScraping.strings.classNamesCSS import ClassNames
 
 from webScraping.scripts.webdriverInstance import WebDriverInstance
-from webScraping.scripts.xpaths import XPaths
-from webScraping.scripts.urls import URL
+from webScraping.strings.xpaths import XPaths
+from webScraping.strings.urls import URL
 
-from webScraping.scripts.webUtility import showPicture, findFollowButtons, scrollWindow, getPicturesForTag
+from webScraping.scripts.webUtility import showPicture, findFollowButtons, getPicturesForTag
 from webScraping.scripts.utility import getUnfollowedUsernames, getStatisticData, updateFollowedUsernames, \
     getFollowedUsernames
 

@@ -1,6 +1,6 @@
 from selenium import webdriver
 from configuration import Configuration
-import json
+
 
 
 class WebDriverInstance:
