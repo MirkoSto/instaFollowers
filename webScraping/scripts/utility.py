@@ -3,6 +3,12 @@ import json
 from configuration import Configuration
 
 
+def getFromStatistic(arg):
+    with open(Configuration.USER_STATISTIC_DIR_PATH) as file:
+        data = json.load(file)
+
+    return data.get(arg)
+
 def getFollowedUsernames():
     with open(Configuration.FOLLOWED_USERNAMES_FILE_PATH) as file:
         data = json.load(file)
@@ -35,4 +41,16 @@ def updateFollowedUsernames(followed):
         json.dump(followed_history, file)
 
 
+def updateStatisticData(number_followed):
+    with open(Configuration.USER_STATISTIC_DIR_PATH, 'r') as file:
+        data = json.load(file)
+
+    new_total = data["total_followed"]
+    new_followed = data["followed"]
+
+    data["total_followed"] = new_total + number_followed
+    data["followed"] = new_followed + number_followed
+
+    with open(Configuration.USER_STATISTIC_DIR_PATH, 'w') as file:
+        json.dump(data, file)
 
