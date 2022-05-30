@@ -37,7 +37,7 @@ def secondForWaitFollowPeriodicCall():
 
 
 def nextStorie():
-    return random.randint(3, 8)
+    return random.randint(2, 7)
 
 
 def numberStories():

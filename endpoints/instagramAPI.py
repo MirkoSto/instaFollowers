@@ -103,7 +103,7 @@ def follow():
 
     tags = request.args.get("tags")
     tags = tags.split(",")
-    instagramClient.tag = tags
+    instagramClient.follow_tags = tags
     instagramClient.follow_requested = True
 
     # samo ce se na prvu aktivnost pokrenuti

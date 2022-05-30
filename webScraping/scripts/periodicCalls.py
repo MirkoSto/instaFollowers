@@ -38,7 +38,8 @@ def behaviour():
     temp_liked = 0
     temp_wathced = 0
 
-
+    follow_request_number = 1
+    like_request_number = 1
 
     #TODO: praviti pauze u koriscenju platforme
     # Na kraju svake iteracije proveravati koliko je vremena bio aktivan, pa ugasiti ako je duze od tipa 20min
@@ -47,9 +48,10 @@ def behaviour():
         #action =  #random.randint(1, 2)
 
         if temp_followed < bot.max_followed and bot.follow_requested: #and action == 1:
-            followed = bot.follow()
+            followed = bot.follow(follow_request_number % len(bot.tags))
             temp_followed = temp_followed + followed
             bot.followers_following()
+            follow_request_number = follow_request_number + 1
 
             doRandomStuff()
 
@@ -61,9 +63,9 @@ def behaviour():
             doRandomStuff()
 
         if temp_liked < bot.max_liked and bot.like_requested:# and action == 3:
-            liked = bot.like()
+            liked = bot.like(like_request_number)
             temp_liked = temp_liked + liked
-
+            like_request_number = like_request_number + 1
             doRandomStuff()
 
         if temp_wathced < bot.max_watched and bot.watch_requested:# and action == 4:

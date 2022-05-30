@@ -61,9 +61,9 @@ class InstagramClient:
 
         self.started_periodic_calls = False
 
-        self.login_thread = Thread(target=self.login, args=())
-        self.follow_thread = Thread(target=self.follow, args=())
-        self.watch_thread = Thread(target=self.watchStories, args=())
+        #self.login_thread = Thread(target=self.login, args=())
+        #self.follow_thread = Thread(target=self.follow, args=())
+        #self.watch_thread = Thread(target=self.watchStories, args=())
 
         self.login_with_cookies(self.driver)
 
@@ -202,7 +202,7 @@ class InstagramClient:
 
 
     #vraca broj zapracenih korisnika
-    def follow(self):
+    def follow(self, index):
         print("Priprema za pracenje...")
         driver = self.driver
         unfollowed_usernames = getUnfollowedUsernames()
@@ -214,13 +214,9 @@ class InstagramClient:
         print("Vec zapraceni korisnici: ")
         print(followed)
 
-        if not self.logged:
-            self.login_with_cookies(driver)
-
-        #TODO: resiti problem indeksa taga
         try:
-            print(f"Tag sa pracenje: {self.tag[0]}")
-            driver.get(URL.TAG_SEARCH + self.tag[0])
+            print(f"Tag sa pracenje: {self.follow_tags[index]}")
+            driver.get(URL.TAG_SEARCH + self.follow_tags[index])
 
             if not showPicture(driver):
                 return 0
@@ -280,6 +276,112 @@ class InstagramClient:
 
         except Exception as e:
             print(e)
+
+
+
+    #obe fje vracaju broj ostvarenih akcija
+    def like(self, index):
+        print("Priprema za lajkovanje...")
+        driver = self.driver
+        unfollowed_usernames = getUnfollowedUsernames()
+        followed = getFollowedUsernames()
+
+        #lista koja sadrzi imena korisnika koje ne treba vise pratiti
+        [followed.append(username) for username in unfollowed_usernames]
+
+        print("Vec zapraceni korisnici: ")
+        print(followed)
+
+
+        try:
+            print(f"Tag sa pracenje: {self.like_tags[index]}")
+            driver.get(URL.TAG_SEARCH + self.like_tags[index])
+
+            if not showPicture(driver):
+                return 0
+
+            follow_buttons, follow_usernames = findFollowButtons(driver)
+            new_followed = []
+
+            number_follows = randomNumbers.followNumberOneTry()
+            if self.temp_followed + number_follows > self.max_followed:
+                number_follows = self.max_followed - self.temp_followed
+
+            print(f"Broj pracenja u ovom zahtevu: {number_follows}")
+
+            i = 0
+            while i < number_follows:
+
+                button_color = follow_buttons[i].value_of_css_property("background-color")
+                print("Color: " + button_color)
+                print(follow_buttons[i].text)
+
+                # ako je dugme plavo i ako nije nekad pre zapratio --> zaprati
+                if button_color != Configuration.WHITE_COLOR_FOLLOW_BUTTON and follow_usernames[i] not in followed:
+                    self.temp_followed = self.temp_followed + 1
+
+                    #follow_buttons[i].click()
+                    new_followed.append(follow_usernames[i])
+                    print(f"Zapracen {follow_usernames[i]}!")
+
+                    # ako je dostignuta kvota pracenja za taj dan, prekini pracenje
+                    if self.max_followed == self.temp_followed:
+                        break
+
+                    i = i + 1
+                    time.sleep(randomNumbers.secondForWaitFollow())
+
+
+
+            if len(new_followed) > 0:
+                updateFollowedUsernames(new_followed)
+                updateStatisticData(self.temp_followed)
+
+            print(f"Zapraceno {self.temp_followed} od {number_follows}")
+            return self.temp_followed
+
+        except Exception as e:
+            print(e)
+
+
+    #gledanje storija korisnika koje pratim
+    def watch(self):
+        driver = self.driver
+        driver.get(URL.INSTAGRAM)
+        time.sleep(3)
+
+        try:
+            driver.find_element(by=By.CLASS_NAME, value=ClassNames.POPUP_DIALOG).click()
+        except Exception as e:
+            print("Nije iskocio dijalog za notifikacije!")
+
+        self.temp_watched = 0
+
+        try:
+            storie = driver.find_element(by=By.CLASS_NAME, value=ClassNames.STORIE_FOLLOWING)
+            storie.click()
+            time.sleep(2)
+        except Exception as e:
+            print(e)
+            print("Greska pri ulasku na stori!")
+            return 0
+
+
+        number_stories = numberStories()
+        print("Treba da odgleda " + str(number_stories) + " storija!")
+
+        page_body = driver.find_element(by=By.TAG_NAME, value="body")
+        for i in range(0, number_stories):
+            watch_time = nextStorie()
+            print("Gledace " + str(watch_time) + " sekundi")
+            time.sleep(watch_time)
+            page_body.send_keys(Keys.ARROW_RIGHT)
+
+            self.temp_watched = self.temp_watched + 1
+
+        page_body.send_keys(Keys.ARROW_UP)
+        return self.temp_watched
+
 
 
     #vraca broj odgledanih storija u jednom zahtevu
@@ -346,9 +448,9 @@ class InstagramClient:
                         number_watched = number_watched + 1
                         time.sleep(randomNumbers.waitToLoadPage())
 
-                    self.temp_stories = self.temp_stories + number_watched
+                    self.temp_watched = self.temp_stories + number_watched
 
-                    if self.temp_stories == self.max_stories:
+                    if self.temp_stories == self.max_watched:
                         return
 
 
@@ -361,51 +463,6 @@ class InstagramClient:
                 print(e)
                 print("Nije pronadjena lista ili greska u spanu za stori!")
                 continue
-
-
-    #obe fje vracaju broj ostvarenih akcija
-    def like(self):
-        pass
-
-    #gledanje storija korisnika koje pratim
-    def watch(self):
-        driver = self.driver
-        driver.get(URL.INSTAGRAM)
-        time.sleep(3)
-
-        try:
-            driver.find_element(by=By.CLASS_NAME, value=ClassNames.POPUP_DIALOG).click()
-        except Exception as e:
-            print("Nije iskocio dijalog za notifikacije!")
-
-        self.temp_watched = 0
-
-        try:
-            storie = driver.find_element(by=By.CLASS_NAME, value=ClassNames.STORIE_FOLLOWING)
-            storie.click()
-            time.sleep(2)
-        except Exception as e:
-            print(e)
-            print("Greska pri ulasku na stori!")
-            return 0
-
-
-        number_stories = numberStories()
-        print("Treba da odgleda " + str(number_stories) + " storija!")
-
-        page_body = driver.find_element(by=By.TAG_NAME, value="body")
-        for i in range(0, number_stories):
-            watch_time = nextStorie()
-            print("Gledace " + str(watch_time) + " sekundi")
-            time.sleep(watch_time)
-            page_body.send_keys(Keys.ARROW_RIGHT)
-
-            self.temp_watched = self.temp_watched + 1
-
-        page_body.send_keys(Keys.ARROW_UP)
-        return self.temp_watched
-
-
 
 
 
