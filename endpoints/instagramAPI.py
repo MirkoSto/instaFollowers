@@ -9,7 +9,7 @@ from configuration import Configuration
 from models import database
 
 from webScraping.scripts.utility import getFromStatistic
-from webScraping.scripts.periodicCalls import followPeriodicCall, behaviour2
+from webScraping.scripts.periodicCalls import behaviour
 
 app = Flask(__name__)
 app.config.from_object(Configuration)
@@ -87,7 +87,7 @@ def actionFunction():
     if not instagramClient.started_periodic_calls:
         instagramClient.started_periodic_calls = True
         #samo ce se na prvu aktivnost pokrenuti
-        thread = threading.Thread(target=followPeriodicCall, args=(), kwargs={})
+        thread = threading.Thread(target=behaviour, args=(), kwargs={})
         thread.start()
 
     return {"response": "true"}, 200
@@ -165,7 +165,7 @@ def watch():
 
 def startBehaviour(instagramClient):
     instagramClient.started_periodic_calls = True
-    thread = threading.Thread(target=behaviour2, args=(), kwargs={})
+    thread = threading.Thread(target=behaviour, args=(), kwargs={})
     thread.start()
 
 @app.route("/", methods = ["GET"])

@@ -34,3 +34,11 @@ def secondForWaitFollow():
 #izmedju 30 i 45min
 def secondForWaitFollowPeriodicCall():
     return random.randint(1800, 2700)
+
+
+def nextStorie():
+    return random.randint(3, 8)
+
+
+def numberStories():
+    return random.randint(20, 50)

@@ -8,6 +8,10 @@ class ClassNames:
     SCROLL_BOX_LIKES = "qF0y9.Igw0E.IwRSH.eGOV_.acqo5.vwCYk.i0EQd"
 
     STORIE = "_2dbep"
+    STORIE_FOLLOWING = "OE3OK"
+
+    POPUP_DIALOG = "aOOlW.HoLwm"
+
     #USERNAME_LIKED_LIST = "qF0y9.Igw0E.IwRSH.eGOV_._4EzTm"
 
 

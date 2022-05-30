@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from threading import Thread
 
 from configuration import Configuration
+from webScraping.scripts.randomNumbers import numberStories, nextStorie
 from webScraping.strings.classNamesCSS import ClassNames
 
 from webScraping.scripts.webdriverInstance import WebDriverInstance
@@ -22,12 +23,8 @@ from webScraping.scripts import randomNumbers
 print(Configuration.CHROMEDRIVER_PATH)
 
 # TODO: za svako vreme cekanja genersiati random broj sekundi
-# TODO: omoguciti random skrolovanje gore-dole pre neke akcije, sacekati neko vreme pre preuzimanja akcije
-# TODO: gledati sliku neko vreme
-
-#TODO: staviti logovanje u funckiju koja ce pozivati sve ove akcije (PeriodicCalls, ako bude i dalje namenjena za to)
-
-
+#  omoguciti random skrolovanje gore-dole pre neke akcije, sacekati neko vreme pre preuzimanja akcije
+#  gledati sliku neko vreme
 
 class InstagramClient:
 
@@ -148,6 +145,13 @@ class InstagramClient:
                     get_cookies(driver)
 
 
+
+        #osvezavanje kolacica
+        else:
+            get_cookies(driver)
+
+
+
     #vraca vrednost failed
     def login_with_cookies(self, driver):
         # dodavanje kolacica
@@ -241,7 +245,6 @@ class InstagramClient:
                 if button_color != Configuration.WHITE_COLOR_FOLLOW_BUTTON and follow_usernames[i] not in followed:
                     self.temp_followed = self.temp_followed + 1
 
-                    #TODO: otkomentarisati liniju ispod na kraju testiranja
                     #follow_buttons[i].click()
                     new_followed.append(follow_usernames[i])
                     print(f"Zapracen {follow_usernames[i]}!")
@@ -250,9 +253,10 @@ class InstagramClient:
                     if self.max_followed == self.temp_followed:
                         break
 
+                    i = i + 1
                     time.sleep(randomNumbers.secondForWaitFollow())
 
-                i = i + 1
+
 
             if len(new_followed) > 0:
                 updateFollowedUsernames(new_followed)
@@ -365,5 +369,44 @@ class InstagramClient:
 
     #gledanje storija korisnika koje pratim
     def watch(self):
-        pass
+        driver = self.driver
+        driver.get(URL.INSTAGRAM)
+        time.sleep(3)
+
+        try:
+            driver.find_element(by=By.CLASS_NAME, value=ClassNames.POPUP_DIALOG).click()
+        except Exception as e:
+            print("Nije iskocio dijalog za notifikacije!")
+
+        self.temp_watched = 0
+
+        try:
+            storie = driver.find_element(by=By.CLASS_NAME, value=ClassNames.STORIE_FOLLOWING)
+            storie.click()
+            time.sleep(2)
+        except Exception as e:
+            print(e)
+            print("Greska pri ulasku na stori!")
+            return 0
+
+
+        number_stories = numberStories()
+        print("Treba da odgleda " + str(number_stories) + " storija!")
+
+        page_body = driver.find_element(by=By.TAG_NAME, value="body")
+        for i in range(0, number_stories):
+            watch_time = nextStorie()
+            print("Gledace " + str(watch_time) + " sekundi")
+            time.sleep(watch_time)
+            page_body.send_keys(Keys.ARROW_RIGHT)
+
+            self.temp_watched = self.temp_watched + 1
+
+        page_body.send_keys(Keys.ARROW_UP)
+        return self.temp_watched
+
+
+
+
+
 

@@ -1,14 +1,17 @@
 import json
 import time
-from selenium.webdriver.common.by import By
-from webScraping.strings.classNamesCSS import ClassNames
-from configuration import Configuration
-from webScraping.scripts import randomNumbers
 
-# TODO: "realnije" traziti slike
+from selenium.webdriver.common.by import By
+
+from configuration import Configuration
+
+from webScraping.scripts import randomNumbers
 from webScraping.strings.urls import URL
 from webScraping.strings.xpaths import XPaths
 
+from webScraping.strings.classNamesCSS import ClassNames
+
+#TODO: "realnije" traziti slike
 
 #TODO: kolacici isticu posle 19 dana otprilike, tada ce morati ponovo da se uloguje
 def set_cookies(driver):
