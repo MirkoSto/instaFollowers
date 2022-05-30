@@ -38,44 +38,52 @@ def behaviour():
     temp_liked = 0
     temp_wathced = 0
 
-    follow_request_number = 1
-    like_request_number = 1
+    follow_request_number = 0
+    like_request_number = 0
 
     #TODO: praviti pauze u koriscenju platforme
     # Na kraju svake iteracije proveravati koliko je vremena bio aktivan, pa ugasiti ako je duze od tipa 20min
     # koliko vremena pauzira drajver, toliko i sistem
+
+
+    #TODO: vrsiti update uradjenih akcija na dnevnom nivou!
     while True:
         #action =  #random.randint(1, 2)
 
-        if temp_followed < bot.max_followed and bot.follow_requested: #and action == 1:
-            followed = bot.follow(follow_request_number % len(bot.tags))
-            temp_followed = temp_followed + followed
-            bot.followers_following()
-            follow_request_number = follow_request_number + 1
+        try:
+            if temp_followed < bot.max_followed and bot.follow_requested: #and action == 1:
+                followed = bot.follow(follow_request_number % len(bot.follow_tags))
+                temp_followed = temp_followed + followed
+                bot.followers_following()
+                follow_request_number = follow_request_number + 1
 
-            doRandomStuff()
+                doRandomStuff()
 
-        if temp_unfollowed < bot.max_unfollowed and bot.unfollow_requested:# and action == 2:
-            unfollowed = bot.follow()
-            temp_unfollowed = temp_unfollowed + unfollowed
-            bot.followers_following()
+            if temp_unfollowed < bot.max_unfollowed and bot.unfollow_requested:# and action == 2:
+                unfollowed = bot.unfollow()
+                temp_unfollowed = temp_unfollowed + unfollowed
+                bot.followers_following()
 
-            doRandomStuff()
+                doRandomStuff()
 
-        if temp_liked < bot.max_liked and bot.like_requested:# and action == 3:
-            liked = bot.like(like_request_number)
-            temp_liked = temp_liked + liked
-            like_request_number = like_request_number + 1
-            doRandomStuff()
+            if temp_liked < bot.max_liked and bot.like_requested:# and action == 3:
+                liked = bot.like(like_request_number % len(bot.like_tags))
+                temp_liked = temp_liked + liked
+                like_request_number = like_request_number + 1
 
-        if temp_wathced < bot.max_watched and bot.watch_requested:# and action == 4:
-            print("Usao u gledanje storija")
-            watched = bot.watch()
-            temp_wathced = temp_wathced + watched
-            print("Odgledao do sada: " + str(temp_wathced))
+                time.sleep(10)
+                doRandomStuff()
 
-            doRandomStuff()
+            if temp_wathced < bot.max_watched and bot.watch_requested:# and action == 4:
+                print("Usao u gledanje storija")
+                watched = bot.watch()
+                temp_wathced = temp_wathced + watched
+                print("Odgledao do sada: " + str(temp_wathced))
 
+                doRandomStuff()
+
+        except Exception as e:
+            print(e)
 
 def doRandomStuff():
     #raditi neodredjeno (random) vreme

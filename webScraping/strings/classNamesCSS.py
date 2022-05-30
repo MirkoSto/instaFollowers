@@ -12,6 +12,8 @@ class ClassNames:
 
     POPUP_DIALOG = "aOOlW.HoLwm"
 
+    LIKE_SPAN = "fr66n"
+
     #USERNAME_LIKED_LIST = "qF0y9.Igw0E.IwRSH.eGOV_._4EzTm"
 
 

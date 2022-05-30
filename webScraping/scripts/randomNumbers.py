@@ -28,7 +28,7 @@ def watchStorie():
 
 #vraca slucajan broj izmedju 0 i 1
 def secondForWaitFollow():
-    return random.random()
+    return random.uniform(0.5, 2)
 
 
 #izmedju 30 i 45min
@@ -42,3 +42,10 @@ def nextStorie():
 
 def numberStories():
     return random.randint(20, 50)
+
+def ordinalNumberPic(max):
+    return random.randint(0, max)
+
+def secondForWaitLike():
+    return random.randint(2, 5)
+

@@ -79,22 +79,12 @@ def findStories(liked_list):
 
 
 
-def showPicture(driver):
+def showPictureByTag(driver, hrefs_in_view):
     num_err = 0
-    pic_hrefs = []
 
     while num_err < 5:
         try:
-            #driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            #time.sleep(5)
-            # get tags
-            hrefs_in_view = driver.find_elements_by_tag_name('a')
-            # finding relevant hrefs
-            hrefs_in_view = [elem.get_attribute('href') for elem in hrefs_in_view if '/p/' in elem.get_attribute('href')]
-            # building list of unique photos
-            #[pic_hrefs.append(href) for href in hrefs_in_view if href not in pic_hrefs]
 
-           # hrefs_in_view = ["https://www.instagram.com/p/CRe6Z1-LFNS/"]
             for pic_href in hrefs_in_view:
                 driver.get(pic_href)
                 time.sleep(3)
@@ -126,7 +116,29 @@ def showPicture(driver):
             num_err = num_err + 1
 
 
-def findFollowButtons(driver):
+def getTagPics(driver):
+    hrefs_in_view = driver.find_elements_by_tag_name('a')
+    # finding relevant hrefs
+    hrefs_in_view = [elem.get_attribute('href') for elem in hrefs_in_view if '/p/' in elem.get_attribute('href')]
+
+    return hrefs_in_view
+
+def getUsersPics(driver):
+    try:
+
+        hrefs_in_view = driver.find_elements_by_tag_name('a')
+        hrefs_in_view = [elem.get_attribute('href') for elem in hrefs_in_view if '/p/' in elem.get_attribute('href')]
+
+        print(f"Pronadjeno {len(hrefs_in_view)} slika!")
+
+        return hrefs_in_view
+
+    except Exception as e:
+        print(e)
+        return []
+
+
+def findFollowButtonsAndUsernames(driver):
     print("Loading follow button-a...")
     buttons = []
     usernames = []
@@ -171,4 +183,5 @@ def findFollowingUsernames(driver):
     except Exception as e:
         print(e)
         return following_usernames
+
 
