@@ -218,8 +218,8 @@ class InstagramClient:
 
             pic_hrefs = getTagPics(driver)
 
-            if not showPictureByTag(driver):
-                return False, []
+            if not showPictureByTag(driver, pic_hrefs):
+                return False, [], []
 
         except Exception as e:
             print(e)
@@ -236,7 +236,7 @@ class InstagramClient:
         try:
 
             #ako dodje do greske u pripremi, izlazi iz fje
-            success, followed = self.preparingForFollowingOrLiking(driver, self.follow_tags[index])
+            success, followed, pic_hrefs = self.preparingForFollowingOrLiking(driver, self.follow_tags[index])
             if not success:
                 return 0
 
@@ -311,7 +311,7 @@ class InstagramClient:
 
 
             #ako dodje do greske u pripremi, izlazi iz fje
-            success, followed = self.preparingForFollowingOrLiking(driver, self.like_tags[index])
+            success, followed, pic_hrefs = self.preparingForFollowingOrLiking(driver, self.like_tags[index])
             if not success:
                 return 0
 
