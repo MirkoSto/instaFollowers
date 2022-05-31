@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from configuration import Configuration
 
 from webScraping.scripts import randomNumbers
+from webScraping.scripts.utility import printExceptionDetails
 from webScraping.strings.urls import URL
 from webScraping.strings.xpaths import XPaths
 
@@ -74,7 +75,7 @@ def findStories(liked_list):
         return stories
 
     except Exception as e:
-        print(e)
+        printExceptionDetails()
         return []
 
 
@@ -112,8 +113,30 @@ def showPictureByTag(driver, hrefs_in_view):
             if num_err == 5:
                 return False
 
-            print(e)  # ako se vise od pet puta desi greska, da ne bi doslo do beskonacnog vrtenja
+            printExceptionDetails()  # ako se vise od pet puta desi greska, da ne bi doslo do beskonacnog vrtenja
             num_err = num_err + 1
+
+
+def showPictureByHref(driver, href):
+    driver.get(href)
+    time.sleep(3)
+
+    # probati preko taga
+    likes_button = driver.find_element(by=By.XPATH, value=XPaths.LIKES_OF_PICTURE)
+
+    try:
+
+        print("Broj lajkova: " + likes_button.text)
+        # int(likes_button.text)
+        # TODO: resiti problem  element click intercepted: Element is not clickable at point (808, 508). Other element would receive the click
+        likes_button.click()
+        time.sleep(2)
+
+        return True
+    except Exception as e:
+        printExceptionDetails()
+        print("Korisnik onemogucio broj lajkova!")
+
 
 
 def getTagPics(driver):

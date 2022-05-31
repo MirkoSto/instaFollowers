@@ -15,9 +15,10 @@ from webScraping.strings.xpaths import XPaths
 from webScraping.strings.urls import URL
 
 from webScraping.scripts.webUtility import showPictureByTag, findFollowButtonsAndUsernames, getPicturesForTag, \
-    get_cookies, set_cookies, getUsersPics, getTagPics
+    get_cookies, set_cookies, getUsersPics, getTagPics, showPictureByHref
 from webScraping.scripts.utility import getUnfollowedUsernames, getStatisticData, updateFollowedUsernames, \
-    getFollowedUsernames, getFromStatistic, updateStatisticDataFollow, updateLikedPics, updateStatisticDataLike
+    getFollowedUsernames, getFromStatistic, updateStatisticDataFollow, updateLikedPics, updateStatisticDataLike, \
+    getLikedUsers, printExceptionDetails, updateLikedUsers
 
 from webScraping.scripts import randomNumbers
 
@@ -59,6 +60,10 @@ class InstagramClient:
         self.unfollow_requested = False
         self.like_requested = False
         self.watch_requested = False
+
+        #podatak koji se cuva samo u RAM memoriji. Cuva slike iz kojih je pronalazio korisnike za lajkovanje za taj dan
+        #TODO: podesiti da se posle svakog dana brise lista
+        self.searched_pictures = []
 
         self.started_periodic_calls = False
 
@@ -218,6 +223,12 @@ class InstagramClient:
 
             pic_hrefs = getTagPics(driver)
 
+            print(f"Pronadjeno {len(pic_hrefs)} slika sa taga")
+
+            pic_hrefs = [href for href in pic_hrefs if href not in self.searched_pictures]
+
+            print(f"Posle izbacivanja slika ima {len(pic_hrefs)}")
+
             if not showPictureByTag(driver, pic_hrefs):
                 return False, [], []
 
@@ -227,11 +238,14 @@ class InstagramClient:
 
         return True, followed, pic_hrefs
 
+
+
     #vraca broj zapracenih korisnika
-    def follow(self, index):
+    def follow(self, today_followed, index):
         print("Priprema za pracenje...")
         driver = self.driver
 
+        self.temp_followed = 0
 
         try:
 
@@ -244,8 +258,8 @@ class InstagramClient:
             new_followed = []
 
             number_follows = randomNumbers.followNumberOneTry()
-            if self.temp_followed + number_follows > self.max_followed:
-                number_follows = self.max_followed - self.temp_followed
+            if today_followed + number_follows > self.max_followed:
+                number_follows = self.max_followed - today_followed
 
             print(f"Broj pracenja u ovom zahtevu: {number_follows}")
 
@@ -297,18 +311,18 @@ class InstagramClient:
             print(e)
 
 
-    #TODO: obezbediti da predje na sledecu sliku sa taga, ako nema dovoljno otkljucanih korisnika na prethodnoj slici
-    # i obezbediti da ne ulazi u sliku u kojoj je vec bio (ne treba pamtiti dugo te slike!)
-
     #ne lajkuje slike korisnika koje ne prati
-    def like(self, index):
+    def like(self, today_liked, index):
         print("Priprema za lajkovanje...")
         driver = self.driver
 
+        liked_users = getLikedUsers()
+
         liked_pics = []
+        number_likes = 0
+        self.temp_liked = 0
 
         try:
-
 
             #ako dodje do greske u pripremi, izlazi iz fje
             success, followed, pic_hrefs = self.preparingForFollowingOrLiking(driver, self.like_tags[index])
@@ -316,56 +330,81 @@ class InstagramClient:
                 return 0
 
             follow_buttons, like_usernames = findFollowButtonsAndUsernames(driver)
+            self.searched_pictures.append(pic_hrefs.pop(0))
 
             number_likes = randomNumbers.followNumberOneTry()
-            if self.temp_followed + number_likes > self.max_followed:
-                number_likes = self.max_liked - self.temp_liked
+            if today_liked + number_likes > self.max_followed:
+                number_likes = self.max_liked - today_liked
 
             print(f"Broj korisnika za lajkovanje u ovom zahtevu: {number_likes}")
 
-            for username in like_usernames:
+            while True:
+                for username in like_usernames:
 
-                driver.get(URL.INSTAGRAM + username)
+                    #ako je ovog korisnika vec nekad lajkovao ili zapratio, preskoci ga
+                    if username in liked_users or username in followed:
+                        print(f"Korisnik {username} je vec lajkovan ili zapracen!")
+                        continue
 
-                users_pics = getUsersPics(driver)
-                if len(users_pics) == 0:
-                    continue
+                    driver.get(URL.INSTAGRAM + username)
 
-                pic_number = ordinalNumberPic(len(users_pics) - 1)
-                driver.get(users_pics[pic_number])
+                    users_pics = getUsersPics(driver)
+                    if len(users_pics) == 0:
+                        continue
 
-                like_button = driver.find_element(by=By.CLASS_NAME, value=ClassNames.LIKE_SPAN)
-                like_button = like_button.find_element(by=By.TAG_NAME, value='Button')
+                    pic_number = ordinalNumberPic(len(users_pics) - 1)
+                    driver.get(users_pics[pic_number])
 
-                button_color = like_button.value_of_css_property('color')
-                print("Boja dugmeta: " + button_color)
+                    span_like_button = driver.find_element(by=By.CLASS_NAME, value=ClassNames.LIKE_SPAN)
+                    like_button = span_like_button.find_element(by=By.TAG_NAME, value='Button')
 
-                # ako nije vec lajkovano
-                if button_color != Configuration.RED_COLOR_LIKE_BUTTON and username not in followed:
-                    self.temp_liked = self.temp_liked + 1
+                    button_color = like_button.value_of_css_property('color')
+                    print("Boja dugmeta: " + button_color)
 
-                    like_button.click()
-                    liked_pics.append(users_pics[pic_number])
-                    print(f"Lajkovana slika {users_pics[pic_number]}!")
+                    # ako nije vec lajkovano
+                    if button_color != Configuration.RED_COLOR_LIKE_BUTTON:
+                        self.temp_liked = self.temp_liked + 1
 
-                    if self.temp_liked == number_likes:
-                        break
+                        like_button.click()
+                        liked_pics.append(users_pics[pic_number])
+                        liked_users.append(username)
 
-                    time.sleep(randomNumbers.secondForWaitFollow())
+                        print(f"Lajkovana slika {users_pics[pic_number]}!")
+
+                        time.sleep(randomNumbers.secondForWaitFollow())
+
+                        if self.temp_liked == number_likes:
+                            break
+
+                if self.temp_liked == number_likes:
+                    break
+
+                #pod pretpostavkom da nikad nece doci do kraja liste pretrazenih slika sa taga, jer se lajkuje manji broj ljudi
+                next_pic = pic_hrefs.pop(0)
+                self.searched_pictures.append(next_pic)
+                showPictureByHref(driver, next_pic)
+
 
             if len(liked_pics) > 0:
                 updateLikedPics(liked_pics)
+                updateLikedUsers(liked_users)
                 updateStatisticDataLike(self.temp_liked)
+
 
             print(f"Lajkovano {self.temp_liked} od {number_likes}")
             return self.temp_followed
 
         except Exception as e:
             print(e)
+            printExceptionDetails()
 
             if len(liked_pics) > 0:
                 updateLikedPics(liked_pics)
+                updateLikedUsers(liked_users)
                 updateStatisticDataLike(self.temp_liked)
+
+                print(f"Lajkovano {self.temp_liked} od {number_likes}")
+
                 return self.temp_followed
 
             else:

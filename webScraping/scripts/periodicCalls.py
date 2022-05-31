@@ -52,7 +52,7 @@ def behaviour():
 
         try:
             if temp_followed < bot.max_followed and bot.follow_requested: #and action == 1:
-                followed = bot.follow(follow_request_number % len(bot.follow_tags))
+                followed = bot.follow(temp_followed, follow_request_number % len(bot.follow_tags))
                 temp_followed = temp_followed + followed
                 bot.followers_following()
                 follow_request_number = follow_request_number + 1
@@ -67,7 +67,7 @@ def behaviour():
                 doRandomStuff()
 
             if temp_liked < bot.max_liked and bot.like_requested:# and action == 3:
-                liked = bot.like(like_request_number % len(bot.like_tags))
+                liked = bot.like(temp_liked, like_request_number % len(bot.like_tags))
                 temp_liked = temp_liked + liked
                 like_request_number = like_request_number + 1
 

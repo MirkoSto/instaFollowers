@@ -11,7 +11,8 @@ class Configuration:
     UNFOLLOWED_USERNAMES_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'unfollowed_usernames.json'))
     WEBDRIVER_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'webdriver.json'))
     COOKIES_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'cookies.json'))
-    LIKED_PICTURED_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'liked_pictures.json'))
+    LIKED_PICTURES_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'liked_pictures.json'))
+    LIKED_USERNAMES_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'liked_usernames.json'))
 
     BLUE_COLOR_FOLLOW_BUTTON = "rgba(0, 149, 246, 1)"
     WHITE_COLOR_FOLLOW_BUTTON = "rgba(0, 0, 0, 0)"

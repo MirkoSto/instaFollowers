@@ -1,4 +1,5 @@
 import json
+import sys
 
 from configuration import Configuration
 
@@ -30,6 +31,21 @@ def getStatisticData():
     return data
 
 
+def getLikedUsers():
+    with open(Configuration.LIKED_USERNAMES_FILE_PATH) as file:
+        data = json.load(file)
+
+    return data.get("liked_usernames")
+
+
+def updateLikedUsers(liked_users):
+
+    data = {"liked_usernames" : liked_users}
+
+    with open(Configuration.LIKED_USERNAMES_FILE_PATH, 'w') as file:
+        json.dump(data, file)
+
+
 def updateFollowedUsernames(followed):
     fileDir = Configuration.FOLLOWED_USERNAMES_FILE_PATH
     with open(fileDir, 'r') as file:
@@ -42,7 +58,7 @@ def updateFollowedUsernames(followed):
 
 
 def updateLikedPics(pics):
-    fileDir = Configuration.LIKED_PICTURED_FILE_PATH
+    fileDir = Configuration.LIKED_PICTURES_FILE_PATH
     with open(fileDir, 'r') as file:
         pictures = json.load(file)
 
@@ -73,14 +89,13 @@ def updateStatisticDataLike(number_liked):
         data = json.load(file)
 
     new_total = data["total_liked"]
-    new_followed = data["liked"]
+    new_liked = data["liked"]
 
     data["total_liked"] = new_total + number_liked
-    data["liked"] = new_followed + number_liked
+    data["liked"] = new_liked + number_liked
 
     with open(Configuration.USER_STATISTIC_DIR_PATH, 'w') as file:
         json.dump(data, file)
-
 
 
 def updateStatisticDataWatch(number_watched):
@@ -95,3 +110,14 @@ def updateStatisticDataWatch(number_watched):
 
     with open(Configuration.USER_STATISTIC_DIR_PATH, 'w') as file:
         json.dump(data, file)
+
+
+
+def printExceptionDetails():
+    exception_type, exception_object, exception_traceback = sys.exc_info()
+    filename = exception_traceback.tb_frame.f_code.co_filename
+    line_number = exception_traceback.tb_lineno
+
+    print("Exception type: ", exception_type)
+    print("File name: ", filename)
+    print("Line number: ", line_number)
