@@ -41,7 +41,7 @@ def nextStorie():
 
 
 def numberStories():
-    return random.randint(20, 50)
+    return random.randint(3, 6)
 
 def ordinalNumberPic(max):
     return random.randint(0, max)

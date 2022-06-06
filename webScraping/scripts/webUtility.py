@@ -1,6 +1,8 @@
 import json
 import time
 
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
+from selenium.webdriver.common.actions.mouse_button import MouseButton
 from selenium.webdriver.common.by import By
 
 from configuration import Configuration
@@ -15,8 +17,10 @@ from webScraping.strings.classNamesCSS import ClassNames
 #TODO: "realnije" traziti slike
 
 #TODO: kolacici isticu posle 19 dana otprilike, tada ce morati ponovo da se uloguje
+
+#set from driver in file
 def set_cookies(driver):
-    driver.get(URL.INSTAGRAM)
+    driver.get(URL.INSTAGRAM_LOGIN)
     time.sleep(5)
 
     with open(Configuration.COOKIES_FILE_PATH, 'r') as file:
@@ -31,6 +35,7 @@ def set_cookies(driver):
     return True
 
 
+#get from driver
 def get_cookies(driver):
     cookies = driver.get_cookies()
     print(cookies)
@@ -60,11 +65,13 @@ def getPicturesForTag(driver):
 
 
 
-def scrollWindow(driver, window):
+def scrollWindow(driver, className):
+
+    window = driver.find_element(by=By.CLASS_NAME, value=className)
     driver.execute_script(
         "arguments[0].scrollTo(0, arguments[0].scrollHeight); return arguments[0].scrollHeight", window)
 
-
+#ne koristi se vise ova fja
 def findStories(liked_list):
     print("Loading follow button-a...")
 
@@ -84,20 +91,26 @@ def showPictureByTag(driver, hrefs_in_view):
     num_err = 0
 
     while num_err < 5:
+        exit = False
         try:
 
+            i = 0
             for pic_href in hrefs_in_view:
-                driver.get(pic_href)
-                time.sleep(3)
+                if i == len(hrefs_in_view):
+                    exit = True
+                    break
 
-                #probati preko taga
-                likes_button = driver.find_element(by=By.XPATH, value=XPaths.LIKES_OF_PICTURE)
+                i = i + 1
+
+                driver.get(pic_href)
+                time.sleep(5)
 
                 try:
+                    # probati preko taga
+                    likes_button = driver.find_element(by=By.CLASS_NAME, value=ClassNames.LIKES_OF_PICTURE)
 
                     print("Broj lajkova: " + likes_button.text)
                     #int(likes_button.text)
-                    #TODO: resiti problem  element click intercepted: Element is not clickable at point (808, 508). Other element would receive the click
                     likes_button.click()
                     time.sleep(2)
 
@@ -107,6 +120,9 @@ def showPictureByTag(driver, hrefs_in_view):
                     print("Korisnik onemogucio broj lajkova!")
                     num_err = num_err + 1
                     continue
+
+            if exit:
+                break
 
 
         except Exception as e:
@@ -122,13 +138,11 @@ def showPictureByHref(driver, href):
     time.sleep(3)
 
     # probati preko taga
-    likes_button = driver.find_element(by=By.XPATH, value=XPaths.LIKES_OF_PICTURE)
+    likes_button = driver.find_element(by=By.CLASS_NAME, value=ClassNames.LIKES_OF_PICTURE)
 
     try:
 
         print("Broj lajkova: " + likes_button.text)
-        # int(likes_button.text)
-        # TODO: resiti problem  element click intercepted: Element is not clickable at point (808, 508). Other element would receive the click
         likes_button.click()
         time.sleep(2)
 
@@ -185,26 +199,49 @@ def findFollowButtonsAndUsernames(driver):
 
         return buttons, usernames
     except Exception as e:
-        print(e)
+        printExceptionDetails()
         return [], []
 
 
-def findFollowingUsernames(driver):
+def findUnfollowButtonsAndUsernames(driver):
     print("Loading following usernames...")
 
-    following_usernames = []
 
     try:
-        hrefs = driver.find_elements_by_tag_name('a')
-        following_list = [elem.get_attribute('href') for elem in hrefs if Configuration.USERNAME + "/following/" in elem.get_attribute('href')]
-        print(str(len(following_list)))
 
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(randomNumbers.numberForWaitScrollingList())
+        following_list = driver.find_element(by=By.CLASS_NAME, value=ClassNames.FOLLOWING_LIST)
+        items = following_list.find_elements(by=By.TAG_NAME, value="a")
 
+        buttons = following_list.find_elements(by=By.TAG_NAME, value="button")
+
+        following_usernames = [elem.get_attribute('href') for elem in items]
+        following_usernames = [username.removeprefix("https://www.instagram.com/") for username in following_usernames]
+        following_usernames = [username.removesuffix("/") for username in following_usernames]
+
+        usernames = []
+        for username in following_usernames:
+            if username not in usernames:
+                usernames.append(username)
+
+        print(f"Broj korisnika: {len(usernames)}")
+        print(f"Broj dugmica: {len(buttons)}")
+        print(usernames)
+      #  for button in buttons:
+        #    print(button.text)
+
+
+        return usernames, buttons
 
     except Exception as e:
-        print(e)
-        return following_usernames
+        printExceptionDetails()
+
+        return [], []
 
 
+def clickAtPoint(driver, x, y):
+    action = ActionBuilder(driver)
+    action.pointer_action.move_to_location(x, y)
+    action.pointer_action.pointer_down(MouseButton.LEFT)
+    action.pointer_action.pointer_up(MouseButton.LEFT)
+    action.perform()
+    time.sleep(5)

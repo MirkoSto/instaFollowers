@@ -13,16 +13,19 @@ class Configuration:
     COOKIES_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'cookies.json'))
     LIKED_PICTURES_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'liked_pictures.json'))
     LIKED_USERNAMES_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'liked_usernames.json'))
+    WATCHED_USERNAMES_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'watched_usernames.json'))
+    USER_PROFILE_PICTURE_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'profile_picture.png'))
+    ACTIONS_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), 'webScraping', 'data', 'actions.json'))
+
 
     BLUE_COLOR_FOLLOW_BUTTON = "rgba(0, 149, 246, 1)"
     WHITE_COLOR_FOLLOW_BUTTON = "rgba(0, 0, 0, 0)"
 
     RED_COLOR_LIKE_BUTTON = "rgb(237, 73, 86)"
 
+
+    USERNAME2 = "mirko_stojanovic_"
     USERNAME = "dd4085222"
     PASSWORD = "newpassword.1"
 
-
-    #USERNAME = "sto_photo_"
-    #PASSWORD = "feelgood.007"
 

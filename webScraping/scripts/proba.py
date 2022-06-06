@@ -1,7 +1,17 @@
+import datetime
 import json
-from configuration import Configuration
+import os
 
-with open(Configuration.UNFOLLOWED_USERNAMES_FILE_PATH) as file:
-    data = json.load(file)
-    print("Unfollowed usernames: ")
-    print(data.get("unfollowed_usernames"))
+
+starting_actions = datetime.datetime.today()
+ending_actions = starting_actions + datetime.timedelta(days=1)
+
+startingTimePermission = datetime.datetime.fromisoformat(getStartingPermission())
+
+print(starting_actions)
+
+print(ending_actions)
+
+print(startingTimePermission)
+
+print(starting_actions < startingTimePermission)
